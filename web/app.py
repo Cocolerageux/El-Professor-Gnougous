@@ -230,6 +230,21 @@ def create_web_app(config):
     
     app = Flask(__name__)
     app.secret_key = config.get('web_secret_key', 'changez_cette_cle')
+    DASHBOARD_PASSWORD = 'Gnoug02520'
+    from flask import session
+    
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        """Page de connexion au dashboard"""
+        error = None
+        if request.method == 'POST':
+            password = request.form.get('password')
+            if password == DASHBOARD_PASSWORD:
+                session['authenticated'] = True
+                return redirect(url_for('dashboard'))
+            else:
+                error = 'Mot de passe incorrect.'
+        return render_template('login.html', error=error)
     
     # Configuration CORS pour permettre les requêtes depuis d'autres domaines
     CORS(app)
@@ -248,6 +263,8 @@ def create_web_app(config):
     
     @app.route('/dashboard')
     def dashboard():
+        if not session.get('authenticated'):
+            return redirect(url_for('login'))
         """Tableau de bord principal"""
         stats = run_async_safe(get_stats_data())
         if not stats:
