@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-users"></i> Utilisateurs</h1>
+    <button class="btn btn-primary" onclick="refreshUsers()">
+        <i class="fas fa-sync-alt"></i> Actualiser
+    </button>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list"></i> Liste des Utilisateurs</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom d'utilisateur</th>
+                                <th>Niveau Textuel</th>
+                                <th>Niveau Vocal</th>
+                                <th>Pièces</th>
+                                <th>Discord ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if users %}
+                                {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-user"></i> 
+                                        <strong>{{ user.username }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-comments"></i> {{ user.text_level }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-microphone"></i> {{ user.voice_level }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-coins"></i> {{ user.coins }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code>{{ user.discord_id }}</code>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Aucun utilisateur trouvé
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques des utilisateurs -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Répartition des Niveaux Textuels</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="textLevelsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Répartition des Niveaux Vocaux</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="voiceLevelsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Fonction pour actualiser la liste des utilisateurs
+function refreshUsers() {
+    location.reload();
+}
+
+// Initialisation des graphiques
+document.addEventListener('DOMContentLoaded', function() {
+    // Récupérer les données depuis l'API
+    fetch('/api/users')
+        .then(response => response.json())
+        .then(users => {
+            createLevelCharts(users);
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des utilisateurs:', error);
+        });
+});
+
+function createLevelCharts(users) {
+    // Analyser les niveaux textuels
+    const textLevels = users.map(u => u.text_level);
+    const voiceLevels = users.map(u => u.voice_level);
+    
+    // Grouper par tranches de niveaux
+    const textGroups = groupByLevels(textLevels);
+    const voiceGroups = groupByLevels(voiceLevels);
+    
+    // Graphique des niveaux textuels
+    const ctx1 = document.getElementById('textLevelsChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+            labels: ['1-5', '6-10', '11-20', '21+'],
+            datasets: [{
+                data: [textGroups.low, textGroups.mid, textGroups.high, textGroups.expert],
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+    
+    // Graphique des niveaux vocaux
+    const ctx2 = document.getElementById('voiceLevelsChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['1-5', '6-10', '11-20', '21+'],
+            datasets: [{
+                data: [voiceGroups.low, voiceGroups.mid, voiceGroups.high, voiceGroups.expert],
+                backgroundColor: ['#FF9F40', '#9966FF', '#4BC0C0', '#FF6384']
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+}
+
+function groupByLevels(levels) {
+    return {
+        low: levels.filter(l => l >= 1 && l <= 5).length,
+        mid: levels.filter(l => l >= 6 && l <= 10).length,
+        high: levels.filter(l => l >= 11 && l <= 20).length,
+        expert: levels.filter(l => l >= 21).length
+    };
+}
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+# Secrets et configuration locale
+config.json
+bot.log
+*.log
+
+# Base de données locale
+bot_data.db
+*.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
+venv/
+ENV/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Fichiers temporaires
+*.tmp
+*.temp

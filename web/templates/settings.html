@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-cog"></i> Paramètres</h1>
+    <button class="btn btn-success" onclick="saveConfig()">
+        <i class="fas fa-save"></i> Sauvegarder
+    </button>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-robot"></i> Configuration du Bot</h5>
+            </div>
+            <div class="card-body">
+                <form id="configForm">
+                    <div class="mb-3">
+                        <label for="bot_token" class="form-label">Token du Bot Discord</label>
+                        <input type="password" class="form-control" id="bot_token" name="bot_token" 
+                               value="{{ config.bot_token }}" placeholder="Votre token de bot Discord">
+                        <div class="form-text">
+                            Obtenez votre token sur <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="guild_id" class="form-label">ID du Serveur Discord</label>
+                        <input type="text" class="form-control" id="guild_id" name="guild_id" 
+                               value="{{ config.guild_id }}" placeholder="ID de votre serveur Discord">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="web_port" class="form-label">Port de l'Interface Web</label>
+                        <input type="number" class="form-control" id="web_port" name="web_port" 
+                               value="{{ config.web_port }}" min="1000" max="65535">
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-star"></i> Paramètres d'Expérience</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="text_xp_min" class="form-label">XP Textuel Minimum</label>
+                            <input type="number" class="form-control" id="text_xp_min" 
+                                   value="{{ config.xp_settings.text_xp_min }}" min="1" max="100">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="text_xp_max" class="form-label">XP Textuel Maximum</label>
+                            <input type="number" class="form-control" id="text_xp_max" 
+                                   value="{{ config.xp_settings.text_xp_max }}" min="1" max="100">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="voice_xp_per_minute" class="form-label">XP Vocal par Minute</label>
+                            <input type="number" class="form-control" id="voice_xp_per_minute" 
+                                   value="{{ config.xp_settings.voice_xp_per_minute }}" min="1" max="50">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="cooldown_text" class="form-label">Cooldown Textuel (secondes)</label>
+                            <input type="number" class="form-control" id="cooldown_text" 
+                                   value="{{ config.xp_settings.cooldown_text }}" min="10" max="300">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="level_multiplier" class="form-label">Multiplicateur de Niveau</label>
+                    <input type="number" class="form-control" id="level_multiplier" 
+                           value="{{ config.xp_settings.level_multiplier }}" min="50" max="500">
+                    <div class="form-text">Plus cette valeur est élevée, plus il faut d'XP pour monter de niveau</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-coins"></i> Paramètres de Monnaie</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="coins_per_message" class="form-label">Coins par Message</label>
+                            <input type="number" class="form-control" id="coins_per_message" 
+                                   value="{{ config.coin_settings.coins_per_message }}" min="1" max="10">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="coins_per_voice_minute" class="form-label">Coins par Minute Vocale</label>
+                            <input type="number" class="form-control" id="coins_per_voice_minute" 
+                                   value="{{ config.coin_settings.coins_per_voice_minute }}" min="1" max="20">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="daily_bonus" class="form-label">Bonus Quotidien</label>
+                            <input type="number" class="form-control" id="daily_bonus" 
+                                   value="{{ config.coin_settings.daily_bonus }}" min="50" max="500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Aide</h5>
+            </div>
+            <div class="card-body">
+                <h6>Comment obtenir votre token de bot ?</h6>
+                <ol class="small">
+                    <li>Allez sur <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a></li>
+                    <li>Créez une nouvelle application</li>
+                    <li>Allez dans la section "Bot"</li>
+                    <li>Cliquez sur "Copy" sous Token</li>
+                    <li>Collez le token ci-dessus</li>
+                </ol>
+                
+                <h6 class="mt-3">Comment obtenir l'ID de votre serveur ?</h6>
+                <ol class="small">
+                    <li>Activez le mode développeur dans Discord</li>
+                    <li>Clic droit sur votre serveur</li>
+                    <li>Cliquez sur "Copier l'ID"</li>
+                    <li>Collez l'ID ci-dessus</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-shield-alt"></i> Sécurité</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Important :</strong> Ne partagez jamais votre token de bot. Il donne un accès complet à votre bot.
+                </div>
+                
+                <button class="btn btn-danger btn-sm" onclick="regenerateSecret()">
+                    <i class="fas fa-key"></i> Régénérer la clé secrète web
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function saveConfig() {
+    const form = document.getElementById('configForm');
+    const formData = new FormData(form);
+    
+    const config = {
+        bot_token: formData.get('bot_token'),
+        guild_id: formData.get('guild_id'),
+        web_port: parseInt(formData.get('web_port')),
+        xp_settings: {
+            text_xp_min: parseInt(document.getElementById('text_xp_min').value),
+            text_xp_max: parseInt(document.getElementById('text_xp_max').value),
+            voice_xp_per_minute: parseInt(document.getElementById('voice_xp_per_minute').value),
+            cooldown_text: parseInt(document.getElementById('cooldown_text').value),
+            level_multiplier: parseInt(document.getElementById('level_multiplier').value)
+        },
+        coin_settings: {
+            coins_per_message: parseInt(document.getElementById('coins_per_message').value),
+            coins_per_voice_minute: parseInt(document.getElementById('coins_per_voice_minute').value),
+            daily_bonus: parseInt(document.getElementById('daily_bonus').value)
+        }
+    };
+    
+    fetch('/api/config', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(config)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Configuration sauvegardée avec succès !');
+            location.reload();
+        } else {
+            alert('Erreur lors de la sauvegarde : ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la sauvegarde de la configuration');
+    });
+}
+
+function regenerateSecret() {
+    if (confirm('Êtes-vous sûr de vouloir régénérer la clé secrète ? Cela nécessitera un redémarrage de l\'application.')) {
+        // TODO: Implémenter la régénération de la clé secrète
+        alert('Fonctionnalité à implémenter');
+    }
+}
+</script>
+{% endblock %}

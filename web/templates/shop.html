@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-store"></i> Boutique</h1>
+    <div>
+        <button class="btn btn-primary" onclick="refreshShop()">
+            <i class="fas fa-sync-alt"></i> Actualiser
+        </button>
+        <button class="btn btn-success" onclick="showAddItemModal()">
+            <i class="fas fa-plus"></i> Ajouter un Article
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-shopping-cart"></i> Articles Disponibles</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Description</th>
+                                <th>Prix</th>
+                                <th>Niveau Requis</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if shop_items and shop_items|length > 0 %}
+                                {% for item in shop_items %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.name }}</strong>
+                                    </td>
+                                    <td>{{ item.description }}</td>
+                                    <td>
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-coins"></i> {{ item.price }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-star"></i> Niveau {{ item.required_text_level }}
+                                            {% if item.required_voice_level > 0 and item.required_voice_level != item.required_text_level %}
+                                            / Vocal {{ item.required_voice_level }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if item.item_type == 'role' %}bg-primary{% elif item.item_type == 'privilege' %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {{ item.item_type }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewItem({{ item.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="editItem({{ item.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteItem({{ item.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Aucun article trouvé dans la boutique
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques de la boutique -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar"></i> Répartition par Type</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="itemTypesChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Répartition par Prix</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="pricesChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter un article -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus"></i> Ajouter un Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addItemForm">
+                    <div class="mb-3">
+                        <label for="itemName" class="form-label">Nom de l'article</label>
+                        <input type="text" class="form-control" id="itemName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="itemDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="itemDescription" rows="3" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="itemPrice" class="form-label">Prix (en pièces)</label>
+                                <input type="number" class="form-control" id="itemPrice" min="1" placeholder="Ex: 100" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="itemLevel" class="form-label">Niveau requis</label>
+                                <input type="number" class="form-control" id="itemLevel" min="1" placeholder="Ex: 5" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="itemType" class="form-label">Type d'article</label>
+                        <select class="form-control" id="itemType" required>
+                            <option value="">Sélectionner un type</option>
+                            <option value="role">Rôle Discord</option>
+                            <option value="item">Objet permanent</option>
+                            <option value="consumable">Objet consommable</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-info">
+                        <small>
+                            <strong>Types d'articles :</strong><br>
+                            • <strong>Rôle Discord :</strong> Attribue un rôle Discord à l'utilisateur<br>
+                            • <strong>Objet permanent :</strong> Objet qui reste dans l'inventaire<br>
+                            • <strong>Objet consommable :</strong> Objet à usage unique
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="addItem()">Ajouter</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Fonction pour actualiser la boutique
+function refreshShop() {
+    location.reload();
+}
+
+// Afficher le modal d'ajout d'article
+function showAddItemModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addItemModal'));
+    modal.show();
+}
+
+// Ajouter un article
+async function addItem() {
+    const form = document.getElementById('addItemForm');
+    const formData = new FormData(form);
+    
+    // Récupérer les données du formulaire
+    const itemData = {
+        name: document.getElementById('itemName').value,
+        description: document.getElementById('itemDescription').value,
+        price: document.getElementById('itemPrice').value,
+        required_level: document.getElementById('itemLevel').value,
+        required_voice_level: document.getElementById('itemLevel').value, // Même niveau pour simplifier
+        item_type: document.getElementById('itemType').value
+    };
+    
+    // Validation côté client
+    if (!itemData.name || !itemData.description || !itemData.price || !itemData.required_level || !itemData.item_type) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/shop', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(itemData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Article ajouté avec succès !');
+            // Fermer le modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addItemModal'));
+            modal.hide();
+            // Actualiser la page
+            refreshShop();
+        } else {
+            alert('Erreur : ' + result.error);
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'ajout de l\'article');
+    }
+}
+
+// Voir les détails d'un article
+function viewItem(itemId) {
+    fetch(`/api/shop`)
+        .then(response => response.json())
+        .then(items => {
+            const item = items.find(i => i.id === itemId);
+            if (item) {
+                let details = `Nom: ${item.name}\n`;
+                details += `Description: ${item.description}\n`;
+                details += `Prix: ${item.price} pièces\n`;
+                details += `Niveau requis (Textuel): ${item.required_text_level}\n`;
+                details += `Niveau requis (Vocal): ${item.required_voice_level}\n`;
+                details += `Type: ${item.item_type}\n`;
+                details += `Actif: ${item.is_active ? 'Oui' : 'Non'}\n`;
+                details += `Consommable: ${item.is_consumable ? 'Oui' : 'Non'}`;
+                alert(details);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la récupération des détails');
+        });
+}
+
+// Modifier un article
+async function editItem(itemId) {
+    try {
+        // Récupérer les détails de l'article
+        const response = await fetch('/api/shop');
+        const items = await response.json();
+        const item = items.find(i => i.id === itemId);
+        
+        if (!item) {
+            alert('Article non trouvé');
+            return;
+        }
+        
+        // Demander les nouvelles valeurs
+        const newName = prompt('Nouveau nom:', item.name);
+        if (newName === null) return; // Annulation
+        
+        const newDescription = prompt('Nouvelle description:', item.description);
+        if (newDescription === null) return;
+        
+        const newPrice = prompt('Nouveau prix:', item.price);
+        if (newPrice === null) return;
+        
+        const newLevel = prompt('Nouveau niveau requis:', item.required_text_level);
+        if (newLevel === null) return;
+        
+        // Validation
+        if (!newName || !newDescription || !newPrice || !newLevel) {
+            alert('Tous les champs sont obligatoires');
+            return;
+        }
+        
+        const updateData = {
+            name: newName,
+            description: newDescription,
+            price: parseInt(newPrice),
+            required_level: parseInt(newLevel)
+        };
+        
+        // Envoyer la mise à jour
+        const updateResponse = await fetch(`/api/shop/${itemId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        const result = await updateResponse.json();
+        
+        if (result.success) {
+            alert('Article mis à jour avec succès !');
+            refreshShop();
+        } else {
+            alert('Erreur : ' + result.error);
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la modification de l\'article');
+    }
+}
+
+// Supprimer un article
+async function deleteItem(itemId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/shop/${itemId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Article supprimé avec succès !');
+            refreshShop();
+        } else {
+            alert('Erreur : ' + result.error);
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la suppression de l\'article');
+    }
+}
+
+// Initialisation des graphiques
+document.addEventListener('DOMContentLoaded', function() {
+    // Récupérer les données depuis l'API
+    fetch('/api/shop')
+        .then(response => response.json())
+        .then(items => {
+            createShopCharts(items);
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement de la boutique:', error);
+        });
+});
+
+function createShopCharts(items) {
+    // Analyser les types d'articles
+    const types = items.map(item => item.item_type);
+    const typeCounts = {};
+    types.forEach(type => {
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+    });
+    
+    // Graphique des types
+    const ctx1 = document.getElementById('itemTypesChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(typeCounts),
+            datasets: [{
+                data: Object.values(typeCounts),
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+    
+    // Analyser les prix
+    const prices = items.map(item => item.price);
+    const priceGroups = {
+        'Pas cher (1-50)': prices.filter(p => p >= 1 && p <= 50).length,
+        'Moyen (51-200)': prices.filter(p => p >= 51 && p <= 200).length,
+        'Cher (201-500)': prices.filter(p => p >= 201 && p <= 500).length,
+        'Très cher (500+)': prices.filter(p => p > 500).length
+    };
+    
+    // Graphique des prix
+    const ctx2 = document.getElementById('pricesChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(priceGroups),
+            datasets: [{
+                label: 'Nombre d\'articles',
+                data: Object.values(priceGroups),
+                backgroundColor: '#36A2EB'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

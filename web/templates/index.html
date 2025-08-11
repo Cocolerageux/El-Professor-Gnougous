@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Accueil</h1>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3><i class="fab fa-discord text-primary"></i> Interface de Gestion du Bot Discord</h3>
+                <p class="lead">Bienvenue dans l'interface de gestion de votre bot Discord avec système d'expérience !</p>
+                
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card stats-card">
+                            <div class="card-body">
+                                <i class="fas fa-robot fa-2x mb-3"></i>
+                                <h5>Bot Actif</h5>
+                                <p>Le bot fonctionne correctement</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card-2">
+                            <div class="card-body">
+                                <i class="fas fa-database fa-2x mb-3"></i>
+                                <h5>Base de Données</h5>
+                                <p>Connectée et opérationnelle</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card-3">
+                            <div class="card-body">
+                                <i class="fas fa-globe fa-2x mb-3"></i>
+                                <h5>Interface Web</h5>
+                                <p>Prête à utiliser</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card-4">
+                            <div class="card-body">
+                                <i class="fas fa-star fa-2x mb-3"></i>
+                                <h5>Système XP</h5>
+                                <p>Fonctionnel</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-info-circle"></i> Fonctionnalités</h5>
+                            </div>
+                            <div class="card-body text-start">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i> Système d'expérience textuel et vocal</li>
+                                    <li><i class="fas fa-check text-success me-2"></i> Attribution automatique de rôles</li>
+                                    <li><i class="fas fa-check text-success me-2"></i> Système de monnaie (coins)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i> Boutique avec objets déblocables</li>
+                                    <li><i class="fas fa-check text-success me-2"></i> Classements par niveau</li>
+                                    <li><i class="fas fa-check text-success me-2"></i> Interface de gestion web</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-cogs"></i> Configuration</h5>
+                            </div>
+                            <div class="card-body text-start">
+                                <p><strong>Token Bot :</strong> {% if config.bot_token != "VOTRE_TOKEN_BOT_DISCORD" %}<span class="text-success">Configuré</span>{% else %}<span class="text-danger">À configurer</span>{% endif %}</p>
+                                <p><strong>ID Serveur :</strong> {% if config.guild_id != "ID_DE_VOTRE_SERVEUR" %}<span class="text-success">Configuré</span>{% else %}<span class="text-danger">À configurer</span>{% endif %}</p>
+                                <p><strong>Base de données :</strong> <span class="text-success">{{ config.database_url }}</span></p>
+                                <p><strong>Port web :</strong> <span class="text-info">{{ config.web_port }}</span></p>
+                                
+                                <a href="/settings" class="btn btn-primary">
+                                    <i class="fas fa-edit"></i> Modifier la configuration
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

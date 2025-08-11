@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-tachometer-alt"></i> Tableau de bord</h1>
+    <button class="btn btn-primary" onclick="refreshStats()">
+        <i class="fas fa-sync-alt"></i> Actualiser
+    </button>
+</div>
+
+<div class="row">
+    <!-- Statistiques principales -->
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-3"></i>
+                <h4 id="total-users">{{ stats.total_users }}</h4>
+                <p>Utilisateurs Total</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card-2">
+            <div class="card-body text-center">
+                <i class="fas fa-comments fa-2x mb-3"></i>
+                <h4 id="total-messages">{{ stats.total_messages }}</h4>
+                <p>Messages Aujourd'hui</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card-3">
+            <div class="card-body text-center">
+                <i class="fas fa-microphone fa-2x mb-3"></i>
+                <h4 id="voice-time">0h</h4>
+                <p>Temps Vocal Aujourd'hui</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card stats-card-4">
+            <div class="card-body text-center">
+                <i class="fas fa-coins fa-2x mb-3"></i>
+                <h4 id="coins-distributed">{{ stats.total_coins_distributed }}</h4>
+                <p>Coins Distribués</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Graphique d'activité -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Activité des 7 derniers jours</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="activityChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top utilisateurs -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-trophy"></i> Top Utilisateurs</h5>
+            </div>
+            <div class="card-body">
+                <div id="top-users">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-medal text-warning"></i> Utilisateur 1</span>
+                        <span class="badge bg-primary">Niveau 25</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-medal text-secondary"></i> Utilisateur 2</span>
+                        <span class="badge bg-primary">Niveau 22</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-medal text-warning"></i> Utilisateur 3</span>
+                        <span class="badge bg-primary">Niveau 20</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Distribution des niveaux -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Distribution des Niveaux Textuels</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="textLevelChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Distribution des Niveaux Vocaux</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="voiceLevelChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activité récente -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-history"></i> Activité Récente</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Action</th>
+                                <th>XP Gagné</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-activity">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Chargement des données...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialisation des graphiques
+const ctx1 = document.getElementById('activityChart').getContext('2d');
+const activityChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+        labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+        datasets: [{
+            label: 'Messages',
+            data: [120, 150, 180, 90, 200, 250, 300],
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        }, {
+            label: 'Temps Vocal (min)',
+            data: [60, 80, 120, 45, 150, 200, 180],
+            borderColor: 'rgb(255, 99, 132)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+const ctx2 = document.getElementById('textLevelChart').getContext('2d');
+const textLevelChart = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+        labels: ['Niveau 1-5', 'Niveau 6-10', 'Niveau 11-20', 'Niveau 21+'],
+        datasets: [{
+            data: [45, 30, 20, 5],
+            backgroundColor: [
+                '#FF6384',
+                '#36A2EB',
+                '#FFCE56',
+                '#4BC0C0'
+            ]
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+const ctx3 = document.getElementById('voiceLevelChart').getContext('2d');
+const voiceLevelChart = new Chart(ctx3, {
+    type: 'doughnut',
+    data: {
+        labels: ['Niveau 1-5', 'Niveau 6-10', 'Niveau 11-20', 'Niveau 21+'],
+        datasets: [{
+            data: [50, 25, 20, 5],
+            backgroundColor: [
+                '#FF9F40',
+                '#9966FF',
+                '#4BC0C0',
+                '#FF6384'
+            ]
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+// Fonction pour actualiser les statistiques
+function refreshStats() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Données reçues:', data); // Debug
+            document.getElementById('total-users').textContent = data.total_users || 0;
+            document.getElementById('total-messages').textContent = data.total_messages || 0;
+            document.getElementById('voice-time').textContent = Math.floor((data.voice_time_today || 0) / 60) + 'h';
+            document.getElementById('coins-distributed').textContent = data.total_coins_distributed || 0;
+            
+            // Mettre à jour le top des utilisateurs
+            updateTopUsersFromAPI();
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des statistiques:', error);
+        });
+}
+
+function updateTopUsersFromAPI() {
+    fetch('/api/users')
+        .then(response => response.json())
+        .then(users => {
+            // Trier par niveau textuel décroissant
+            const sortedUsers = users.sort((a, b) => b.text_level - a.text_level);
+            updateTopUsers(sortedUsers.slice(0, 3));
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des utilisateurs:', error);
+        });
+}
+
+function updateTopUsers(topUsers) {
+    const container = document.getElementById('top-users');
+    if (topUsers.length === 0) {
+        container.innerHTML = '<p class="text-muted">Aucune donnée disponible</p>';
+        return;
+    }
+    
+    const medals = ['fas fa-medal text-warning', 'fas fa-medal text-secondary', 'fas fa-medal text-dark'];
+    container.innerHTML = topUsers.map((user, index) => `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span><i class="${medals[index] || 'fas fa-user'}"></i> ${user.username}</span>
+            <span class="badge bg-primary">Niveau ${user.text_level}</span>
+        </div>
+    `).join('');
+}
+
+// Actualiser les statistiques au chargement
+document.addEventListener('DOMContentLoaded', refreshStats);
+
+// Actualiser automatiquement toutes les 30 secondes
+setInterval(refreshStats, 30000);
+</script>
+{% endblock %}
